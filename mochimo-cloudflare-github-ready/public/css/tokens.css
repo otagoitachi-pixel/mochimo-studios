@@ -1,0 +1,104 @@
+/* ============================================================
+   Mochimo Studios — Design Tokens
+   Single source of truth for color, type, spacing, radius, shadow.
+   ============================================================ */
+
+:root {
+  /* Brand colors */
+  --cream: #FBF6EF;
+  --blush: #F6E1E6;
+  --blush-deep: #F0CDD4;
+  --lavender: #EAE3F8;
+  --lavender-deep: #DCD0F5;
+  --ink: #221F35;
+  --ink-2: #3A3654;
+  --rose: #C1728A;
+  --rose-deep: #A4586F;
+  --rose-soft: #E7B7C4;
+
+  /* Semantic */
+  --bg-app: var(--cream);
+  --bg-surface: #FFFFFF;
+  --bg-surface-muted: #FCFAF6;
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-2);
+  --text-muted: rgba(34, 31, 53, 0.55);
+  --text-faint: rgba(34, 31, 53, 0.35);
+  --border-subtle: rgba(34, 31, 53, 0.08);
+  --border-strong: rgba(34, 31, 53, 0.14);
+  --accent: var(--rose);
+  --accent-deep: var(--rose-deep);
+  --accent-soft: var(--rose-soft);
+  --success: #6B9E78;
+  --danger: #C15050;
+  --danger-deep: #A43D3D;
+  --focus-ring: var(--rose-deep);
+
+  /* Typography */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Radius */
+  --r-sm: 0.5rem;
+  --r-md: 0.875rem;
+  --r-lg: 1.25rem;
+  --r-xl: 1.75rem;
+  --r-full: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px -2px rgba(34, 31, 53, 0.08);
+  --shadow-md: 0 12px 32px -12px rgba(34, 31, 53, 0.16);
+  --shadow-lg: 0 24px 56px -20px rgba(34, 31, 53, 0.24);
+
+  /* Layout */
+  --sidebar-w: 248px;
+  --topbar-h: 60px;
+  --bottomnav-h: 64px;
+  --content-max: 1180px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  min-height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { max-width: 100%; display: block; }
+button { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+.font-display {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-feature-settings: "ss01" on;
+}
+
+::selection { background: var(--rose-soft); color: var(--ink); }
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar (webkit, cosmetic only) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--r-full); }
+::-webkit-scrollbar-track { background: transparent; }
