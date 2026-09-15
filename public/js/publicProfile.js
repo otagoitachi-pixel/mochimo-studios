@@ -15,14 +15,7 @@ async function boot(entryType) {
     return;
   }
 
-  let account;
-  try {
-    account = await api.getPublicAccount(username);
-  } catch (err) {
-    console.error(err);
-    root.innerHTML = notFoundHTML('This profile is temporarily unavailable. Please try again in a moment.');
-    return;
-  }
+  const account = await api.getPublicAccount(username);
   if (!account) {
     root.innerHTML = notFoundHTML(`We couldn't find a Mochimo profile for "${username}".`);
     return;
@@ -38,10 +31,7 @@ async function boot(entryType) {
 
   root.innerHTML = `
     <div class="public-wrap">
-      <div class="public-brand"><span class="brand-mark">◒</span><span>Mochimo</span></div>
-      <div class="public-profile-shell">
-        <div class="phone-frame public-frame"><div class="phone-screen" id="publicPreview"></div></div>
-      </div>
+      <div class="phone-frame public-frame"><div class="phone-screen" id="publicPreview"></div></div>
       <div class="public-actions">
         <button type="button" class="btn btn-primary btn-sm" id="saveContactBtn">${icon('user', { size: 14 })} Save Contact</button>
         <button type="button" class="btn btn-secondary btn-sm" id="shareProfileBtn">${icon('share', { size: 14 })} Share Profile</button>

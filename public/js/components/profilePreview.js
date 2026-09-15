@@ -20,7 +20,6 @@ const THEME_TEXT_MUTED = { dark: 'rgba(251,246,239,0.7)' };
 // there is only one rendering path, so what you see is what visitors see.
 function renderProfilePreview(container, { profile, links, appearance }) {
   if (!container) return;
-  appearance = appearance || { theme: 'mochimo', buttonStyle: 'pill', layout: 'spacious', background: 'mochimo', customBg: '', accentColor: '#C1728A' };
   const bg = appearance.background === 'custom' && appearance.customBg ? appearance.customBg : (THEME_BG[appearance.theme] || THEME_BG.mochimo);
   const textColor = THEME_TEXT[appearance.theme] || '#221F35';
   const textMuted = THEME_TEXT_MUTED[appearance.theme] || '#3A3654';
