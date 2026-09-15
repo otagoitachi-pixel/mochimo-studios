@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Mochimo Profile via QR</title>
+<title>Mochimo Profile via NFC</title>
 <meta name="description" content="View this Mochimo Studios profile — all their links, socials and contact info in one place." />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,12 +13,13 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/preview.css">
+<link rel="stylesheet" href="css/public-profile.css">
 </head>
 <body>
 <div id="publicRoot"></div>
 <script type="module">
   import { boot } from './js/publicProfile.js';
-  boot('qr_scan');
+  boot('nfc_tap');
 </script>
 </body>
 </html>

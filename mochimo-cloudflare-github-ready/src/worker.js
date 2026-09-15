@@ -372,10 +372,15 @@ async function handleGetAnalytics(request, env, user) {
 async function handlePublicProfile(request, env, username) {
   const user = await env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username.toLowerCase()).first();
   if (!user) return errorJson('Profile not found.', 404);
-  const [{ results: links }, appearance] = await Promise.all([
+  const [{ results: links }, appearanceRow] = await Promise.all([
     env.DB.prepare('SELECT * FROM links WHERE user_id = ? AND enabled = 1 ORDER BY sort_order ASC').bind(user.id).all(),
     env.DB.prepare('SELECT * FROM appearance WHERE user_id = ?').bind(user.id).first(),
   ]);
+  const appearance = appearanceRow || {
+    theme: 'mochimo', button_style: 'pill', layout: 'spacious', font: 'plus-jakarta',
+    background: 'mochimo', custom_bg: '', accent_color: '#C1728A',
+    fx_shadows: 1, fx_borders: 1, fx_bg_shapes: 1, fx_animations: 1
+  };
   return json({
     profile: {
       name: user.name, username: user.username, bio: user.bio, avatarUrl: user.avatar_url,

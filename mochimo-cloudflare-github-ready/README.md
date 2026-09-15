@@ -2,11 +2,6 @@
 
 This version is prepared for deployment from **GitHub → Cloudflare Workers**. You do not need to run Wrangler in Termux.
 
-## Site structure
-
-- `public/index.html` — marketing landing page (site root, `/`). Every "Create Your Profile" / "Create Free Profile" button and the "Log in" link point to `app.html`.
-- `public/app.html` — the Mochimo dashboard SPA. It checks `/api/me` on load: if the visitor isn't signed in it shows the login/signup screen; once authenticated it shows the dashboard. So clicking "Create Your Profile" on the landing page opens `app.html`, which shows sign up/login first, then the dashboard opens automatically after auth succeeds — no separate login page file needed.
-
 ## What is included
 
 - Mochimo dashboard frontend in `public/`
