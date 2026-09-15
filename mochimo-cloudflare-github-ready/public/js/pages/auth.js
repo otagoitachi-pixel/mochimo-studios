@@ -3,7 +3,7 @@ import { icon } from '../lib/icons.js';
 import { toast } from '../lib/toast.js';
 
 function renderAuth(root, { onAuthed }) {
-  let mode = 'signup';
+  let mode = new URLSearchParams(location.search).get('login') === '1' ? 'login' : 'signup';
 
   function paint() {
     root.innerHTML = `
