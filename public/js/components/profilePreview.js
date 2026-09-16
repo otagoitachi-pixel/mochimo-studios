@@ -47,8 +47,7 @@ function renderProfilePreview(container, { profile, links, appearance }) {
   screen.style.setProperty('--profile-text-muted', textMuted);
   screen.className = `phone-screen pv-btn-${appearance.buttonStyle} pv-layout-${appearance.layout}`;
 
-  const activeSocials = Object.entries(profile.socials || {})
-    .filter(([k, v]) => v && v.trim() && (!profile.socialsVisible || profile.socialsVisible[k] !== false));
+  const activeSocials = Object.entries(profile.socials || {}).filter(([, v]) => v && v.trim());
   const activeLinks = (links || []).filter(l => l.enabled);
 
   const avatarInner = profile.avatarUrl

@@ -26,8 +26,6 @@ const mapSettings = (s) => s ? ({
   language: s.language, searchVisible: !!s.search_visible
 }) : null;
 
-const boolOr = (v, def) => (v === undefined || v === null ? def : !!v);
-
 const mapProfile = (u) => u ? ({
   avatarUrl: u.avatar_url ?? u.avatarUrl ?? '', name: u.name || '', username: u.username || '',
   bio: u.bio || '', location: u.location || '', website: u.website || '', email: u.email || '', phone: u.phone || '',
@@ -37,13 +35,6 @@ const mapProfile = (u) => u ? ({
     tiktok: u.social_tiktok ?? u.socials?.tiktok ?? '',
     x: u.social_x ?? u.socials?.x ?? '',
     linkedin: u.social_linkedin ?? u.socials?.linkedin ?? ''
-  },
-  socialsVisible: {
-    instagram: boolOr(u.social_instagram_visible ?? u.socialsVisible?.instagram, true),
-    youtube: boolOr(u.social_youtube_visible ?? u.socialsVisible?.youtube, true),
-    tiktok: boolOr(u.social_tiktok_visible ?? u.socialsVisible?.tiktok, true),
-    x: boolOr(u.social_x_visible ?? u.socialsVisible?.x, true),
-    linkedin: boolOr(u.social_linkedin_visible ?? u.socialsVisible?.linkedin, true),
   }
 }) : null;
 
