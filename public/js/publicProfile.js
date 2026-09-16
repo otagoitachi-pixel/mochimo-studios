@@ -31,6 +31,10 @@ async function boot(entryType) {
 
   root.innerHTML = `
     <div class="public-wrap">
+      <div class="public-header">
+        <div class="ph-logo"><img src="img/logo.webp" alt="Mochimo Studios"></div>
+        <div class="ph-tagline">Connect<br>Share<br>Grow</div>
+      </div>
       <div class="phone-frame public-frame"><div class="phone-screen" id="publicPreview"></div></div>
       <div class="public-actions">
         <button type="button" class="btn btn-primary btn-sm" id="saveContactBtn">${icon('user', { size: 14 })} Save Contact</button>
@@ -43,19 +47,32 @@ async function boot(entryType) {
   renderProfilePreview(frame, account);
 
   // Wire real link clicks: validate scheme, log a click event, then navigate.
-  frame.querySelectorAll('.pv-link').forEach((el, i) => {
-    const link = account.links.filter(l => l.enabled)[i];
-    if (!link) return;
+  const wireRow = (el, url, linkId) => {
+    if (!isSafeUrl(url)) return; // don't wire unsafe schemes at all
     el.style.cursor = 'pointer';
     el.setAttribute('role', 'link');
     el.setAttribute('tabindex', '0');
     const go = async () => {
-      if (!isSafeUrl(link.url)) return; // silently refuse unsafe schemes
-      await api.recordEvent(username, 'click', { visitorId, linkId: link.id, device });
-      window.open(link.url, '_blank', 'noopener,noreferrer');
+      await api.recordEvent(username, 'click', { visitorId, linkId, device });
+      window.open(url, '_blank', 'noopener,noreferrer');
     };
     el.addEventListener('click', go);
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  };
+
+  // Quick-connect social rows (profile.socials — instagram/youtube/tiktok/x/linkedin).
+  frame.querySelectorAll('.pv-link-social').forEach((el) => {
+    const key = el.getAttribute('data-social-key');
+    const url = account.profile.socials && account.profile.socials[key];
+    if (!url) return;
+    wireRow(el, url, `social:${key}`);
+  });
+
+  // Custom links (account.links, in the same enabled order they were rendered).
+  frame.querySelectorAll('.pv-link-custom').forEach((el, i) => {
+    const link = account.links.filter(l => l.enabled)[i];
+    if (!link) return;
+    wireRow(el, link.url, link.id);
   });
 
   root.querySelector('#saveContactBtn').addEventListener('click', () => downloadVCard(account.profile));

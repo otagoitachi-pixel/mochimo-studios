@@ -1,70 +1,118 @@
 /* ============================================================
    Reusable Live Profile Preview (phone mockup)
    Single component, driven entirely by app state.
+   Backs the dashboard preview AND the public profile page —
+   one rendering path, so this is what visitors actually see.
    ============================================================ */
 
 .phone-frame {
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   margin: 0 auto;
   border-radius: 2.25rem;
-  border: 8px solid var(--ink);
-  background: var(--ink);
+  border: 1px solid rgba(34, 31, 53, 0.06);
+  background: #fff;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 .phone-screen {
+  position: relative;
+  isolation: isolate;
   background: var(--profile-bg, var(--cream));
   min-height: 420px;
-  padding: 1.75rem 1.25rem 1.5rem;
+  padding: 2.25rem 1.35rem 1.75rem;
   overflow-y: auto;
   max-height: 70vh;
 }
+.phone-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 160px;
+  background:
+    radial-gradient(120% 100% at 14% 0%, var(--blush-deep) 0%, transparent 62%),
+    radial-gradient(120% 100% at 86% 0%, var(--lavender-deep) 0%, transparent 62%);
+  opacity: 0.6;
+  z-index: -1;
+  pointer-events: none;
+}
+
 .pv-avatar {
-  height: 68px; width: 68px; border-radius: 50%; margin: 0 auto;
+  height: 104px; width: 104px; border-radius: 50%; margin: 0 auto;
   background: linear-gradient(135deg, var(--rose-soft), var(--lavender-deep));
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-style: italic; font-size: 1.4rem; color: var(--ink);
+  font-family: var(--font-display); font-style: italic; font-size: 2rem; color: var(--ink);
   overflow: hidden; background-size: cover; background-position: center;
+  border: 4px solid #fff;
+  box-shadow: var(--shadow-md);
+  position: relative;
 }
 .pv-name {
-  font-family: var(--font-display); font-style: italic; text-align: center;
-  margin: 0.65rem 0 0; font-size: 1.05rem; color: var(--profile-text, var(--ink));
+  font-family: var(--font-display); font-style: italic; font-weight: 600; text-align: center;
+  margin: 0.85rem 0 0; font-size: 1.3rem; color: var(--profile-text, var(--ink));
   overflow-wrap: anywhere;
 }
-.pv-handle { text-align: center; font-size: 0.75rem; color: var(--rose-deep); font-weight: 600; margin-top: 0.1rem; overflow-wrap: anywhere; }
-.pv-bio { text-align: center; font-size: 0.78rem; color: var(--profile-text-muted, var(--ink-2)); margin-top: 0.5rem; line-height: 1.45; overflow-wrap: anywhere; }
-
-.pv-socials { display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.85rem; flex-wrap: wrap; }
-.pv-social-icon {
-  height: 32px; width: 32px; border-radius: 50%;
-  background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; color: var(--ink);
+.pv-handle { text-align: center; font-size: 0.8rem; color: var(--rose-deep); font-weight: 700; margin-top: 0.15rem; overflow-wrap: anywhere; }
+.pv-bio {
+  text-align: center; font-size: 0.82rem; color: var(--profile-text-muted, var(--ink-2)); margin-top: 0.6rem;
+  line-height: 1.5; overflow-wrap: anywhere; max-width: 24rem; margin-left: auto; margin-right: auto;
 }
 
-.pv-links { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+/* ---------- Unified link/social rows ---------- */
+.pv-links { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.4rem; }
 .pv-link {
-  display: flex; align-items: center; gap: 0.55rem;
-  padding: 0.55rem 0.75rem; font-size: 0.78rem; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.65rem 0.8rem; font-size: 0.85rem; font-weight: 700; color: var(--ink);
   min-width: 0;
+  background: rgba(255,255,255,0.78);
+  border-radius: var(--r-lg);
+  box-shadow: 0 2px 10px -4px rgba(34,31,53,0.1);
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-.pv-link span.pv-link-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-link[role="link"] { cursor: pointer; }
+.pv-link[role="link"]:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(34,31,53,0.18); }
+.pv-link:focus-visible { outline: 3px solid var(--rose-deep); outline-offset: 2px; }
+
+.pv-link-icon {
+  height: 38px; width: 38px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.pv-link-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; text-align: left; }
+.pv-link-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-link-desc { font-size: 0.72rem; font-weight: 500; color: var(--profile-text-muted, var(--text-muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-link-chevron { flex-shrink: 0; color: var(--text-faint); display: flex; }
+.pv-link-chevron svg { transform: rotate(-90deg); display: block; }
+
+/* Platform / type badge colors */
+.pv-badge-instagram { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
+.pv-badge-youtube  { background: #FF0000; }
+.pv-badge-tiktok   { background: #101010; }
+.pv-badge-x        { background: #000000; }
+.pv-badge-linkedin { background: #0A66C2; }
+.pv-badge-whatsapp { background: #25D366; }
+.pv-badge-lavender { background: var(--lavender-deep); color: var(--ink); }
+.pv-badge-blush    { background: var(--blush-deep); color: var(--ink); }
+.pv-badge-rose     { background: var(--rose); }
+.pv-badge-neutral  { background: var(--ink); }
 
 /* Button style variants applied to .pv-link */
-.pv-btn-soft .pv-link { background: rgba(255,255,255,0.7); border-radius: var(--r-md); }
-.pv-btn-pill .pv-link { background: rgba(255,255,255,0.7); border-radius: var(--r-full); }
-.pv-btn-outline .pv-link { background: transparent; border: 1.5px solid var(--profile-text, var(--ink)); border-radius: var(--r-full); }
-.pv-btn-minimal .pv-link { background: transparent; border-bottom: 1px solid rgba(34,31,53,0.15); border-radius: 0; padding-left: 0.15rem; }
-.pv-btn-rounded .pv-link { background: rgba(255,255,255,0.7); border-radius: 0.4rem; }
+.pv-btn-soft .pv-link { border-radius: var(--r-lg); }
+.pv-btn-pill .pv-link { border-radius: var(--r-full); }
+.pv-btn-outline .pv-link { background: transparent; border: 1.5px solid var(--profile-text, var(--ink)); box-shadow: none; }
+.pv-btn-minimal .pv-link { background: transparent; box-shadow: none; border-bottom: 1px solid rgba(34,31,53,0.12); border-radius: 0; padding-left: 0.2rem; padding-right: 0.2rem; }
+.pv-btn-rounded .pv-link { border-radius: 0.6rem; }
 
-.pv-footer { text-align: center; font-size: 0.62rem; color: var(--profile-text-muted, var(--text-faint)); margin-top: 1.1rem; }
+.pv-footer { text-align: center; font-size: 0.68rem; font-weight: 600; color: var(--profile-text, var(--ink)); margin-top: 1.5rem; }
+.pv-footer-sub { display: block; font-size: 0.58rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--profile-text-muted, var(--text-faint)); margin-top: 0.2rem; }
 
-.pv-empty-links { text-align: center; font-size: 0.75rem; color: var(--profile-text-muted, var(--text-muted)); padding: 1rem 0; }
+.pv-empty-links { text-align: center; font-size: 0.8rem; color: var(--profile-text-muted, var(--text-muted)); padding: 1.5rem 0; }
 
 /* Layout density variants (applied to .pv-links) */
-.pv-layout-compact .pv-links { gap: 0.35rem; }
-.pv-layout-compact .pv-link { padding: 0.4rem 0.65rem; }
-.pv-layout-spacious .pv-links { gap: 0.8rem; }
-.pv-layout-spacious .pv-link { padding: 0.75rem 0.9rem; }
+.pv-layout-compact .pv-links { gap: 0.4rem; }
+.pv-layout-compact .pv-link { padding: 0.5rem 0.65rem; }
+.pv-layout-compact .pv-link-icon { height: 32px; width: 32px; }
+.pv-layout-spacious .pv-links { gap: 0.85rem; }
+.pv-layout-spacious .pv-link { padding: 0.85rem 1rem; }
 
 /* ---------- Public profile page wrapper ---------- */
 .public-wrap {
@@ -72,12 +120,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  padding: 2rem 1rem;
-  background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 45%);
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding: 1.75rem 1.25rem 2.5rem;
+  background: linear-gradient(160deg, var(--blush) 0%, var(--lavender) 55%, var(--cream) 100%);
 }
+.public-header {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+.public-header .ph-logo img { height: 24px; width: auto; display: block; }
+.public-header .ph-tagline {
+  text-align: right; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.16em;
+  line-height: 1.65; color: rgba(34,31,53,0.45); text-transform: uppercase;
+}
+.public-header .ph-tagline::after {
+  content: ''; display: block; width: 26px; height: 1px; background: rgba(34,31,53,0.28);
+  margin: 0.35rem 0 0 auto;
+}
+
 .public-frame { max-width: 340px; }
-.public-frame .phone-screen { min-height: 480px; }
+.public-frame .phone-screen { min-height: 480px; max-height: none; overflow-y: visible; }
 .public-actions { display: flex; gap: 0.75rem; }
-.pv-link:focus-visible { outline: 3px solid var(--rose-deep); outline-offset: 2px; border-radius: var(--r-md); }

@@ -1,10 +1,27 @@
 import { icon } from '../lib/icons.js';
 import { escapeHTML, initials } from '../lib/utils.js';
 
-const SOCIAL_ICON = { instagram: 'instagram', youtube: 'youtube', tiktok: 'tiktok', x: 'x', linkedin: 'linkedin' };
-const LINK_TYPE_ICON = {
-  social: 'link', website: 'globe', whatsapp: 'whatsapp', email: 'mail', phone: 'phone',
-  custom: 'link', product: 'store', music: 'music', video: 'video', booking: 'calendar',
+// Fixed quick-connect socials (profile.socials keys) — always the same five platforms.
+const SOCIAL_META = {
+  instagram: { icon: 'instagram', label: 'Instagram', sub: 'Follow along', badge: 'pv-badge-instagram' },
+  youtube:   { icon: 'youtube',   label: 'YouTube',   sub: 'Watch my videos', badge: 'pv-badge-youtube' },
+  tiktok:    { icon: 'tiktok',    label: 'TikTok',    sub: 'Shorts & more', badge: 'pv-badge-tiktok' },
+  x:         { icon: 'x',        label: 'X',          sub: 'Thoughts & updates', badge: 'pv-badge-x' },
+  linkedin:  { icon: 'linkedin', label: 'LinkedIn',   sub: "Let's connect", badge: 'pv-badge-linkedin' },
+};
+
+// Custom links (account.links) — generic categories chosen by the user.
+const LINK_TYPE_META = {
+  social:   { icon: 'link',     badge: 'pv-badge-neutral' },
+  website:  { icon: 'globe',    badge: 'pv-badge-lavender' },
+  whatsapp: { icon: 'whatsapp', badge: 'pv-badge-whatsapp' },
+  email:    { icon: 'mail',     badge: 'pv-badge-blush' },
+  phone:    { icon: 'phone',    badge: 'pv-badge-blush' },
+  custom:   { icon: 'link',     badge: 'pv-badge-neutral' },
+  product:  { icon: 'store',    badge: 'pv-badge-rose' },
+  music:    { icon: 'music',    badge: 'pv-badge-rose' },
+  video:    { icon: 'video',    badge: 'pv-badge-rose' },
+  booking:  { icon: 'calendar', badge: 'pv-badge-lavender' },
 };
 
 const THEME_BG = {
@@ -37,32 +54,49 @@ function renderProfilePreview(container, { profile, links, appearance }) {
     ? `style="background-image:url('${escapeHTML(profile.avatarUrl)}')"`
     : '';
 
+  const chevron = `<span class="pv-link-chevron" aria-hidden="true">${icon('chevronDown', { size: 14 })}</span>`;
+
+  const socialRows = activeSocials.map(([key]) => {
+    const meta = SOCIAL_META[key] || { icon: 'link', label: key, sub: '', badge: 'pv-badge-neutral' };
+    return `
+      <div class="pv-link pv-link-social" data-social-key="${escapeHTML(key)}">
+        <span class="pv-link-icon ${meta.badge}">${icon(meta.icon, { size: 16 })}</span>
+        <span class="pv-link-text">
+          <span class="pv-link-title">${escapeHTML(meta.label)}</span>
+          ${meta.sub ? `<span class="pv-link-desc">${escapeHTML(meta.sub)}</span>` : ''}
+        </span>
+        ${chevron}
+      </div>
+    `;
+  }).join('');
+
+  const customRows = activeLinks.map(l => {
+    const meta = LINK_TYPE_META[l.type] || LINK_TYPE_META.custom;
+    return `
+      <div class="pv-link pv-link-custom">
+        <span class="pv-link-icon ${meta.badge}">${icon(meta.icon, { size: 16 })}</span>
+        <span class="pv-link-text">
+          <span class="pv-link-title">${escapeHTML(l.title || 'Untitled link')}</span>
+          ${l.description ? `<span class="pv-link-desc">${escapeHTML(l.description)}</span>` : ''}
+        </span>
+        ${chevron}
+      </div>
+    `;
+  }).join('');
+
+  const hasRows = activeSocials.length || activeLinks.length;
+
   screen.innerHTML = `
     <div class="pv-avatar" ${avatarInner}>${profile.avatarUrl ? '' : escapeHTML(initials(profile.name))}</div>
     <p class="pv-name">${escapeHTML(profile.name || 'Your Name')}</p>
     <p class="pv-handle">@${escapeHTML(profile.username || 'username')}</p>
     ${profile.bio ? `<p class="pv-bio">${escapeHTML(profile.bio)}</p>` : ''}
 
-    ${activeSocials.length ? `
-      <div class="pv-socials">
-        ${activeSocials.map(([key]) => `
-          <span class="pv-social-icon" aria-label="${escapeHTML(key)}">${icon(SOCIAL_ICON[key] || 'link', { size: 14 })}</span>
-        `).join('')}
-      </div>
-    ` : ''}
-
     <div class="pv-links">
-      ${activeLinks.length
-        ? activeLinks.map(l => `
-          <div class="pv-link">
-            <span aria-hidden="true">${icon(LINK_TYPE_ICON[l.type] || 'link', { size: 15 })}</span>
-            <span class="pv-link-label">${escapeHTML(l.title || 'Untitled link')}</span>
-          </div>
-        `).join('')
-        : '<p class="pv-empty-links">Your links will appear here.</p>'}
+      ${hasRows ? socialRows + customRows : '<p class="pv-empty-links">Your links will appear here.</p>'}
     </div>
 
-    <p class="pv-footer">Powered by Mochimo</p>
+    <p class="pv-footer">Powered by Mochimo<span class="pv-footer-sub">One tap. More possibilities.</span></p>
   `;
 }
 
