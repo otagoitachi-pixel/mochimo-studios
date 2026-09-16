@@ -11,7 +11,7 @@ This version is prepared for deployment from **GitHub → Cloudflare Workers**. 
 
 - Mochimo dashboard frontend in `public/`
 - Cloudflare Worker API in `src/worker.js`
-- D1 database schema/migration in `migrations/0001_initial.sql`
+- D1 database schema/migrations in `migrations/` (`0001_initial.sql`, `0002_social_visibility.sql`)
 - Cookie-based authentication
 - Dynamic public profiles: `/u/:username`
 - NFC tracking/redirect: `/n/:username`

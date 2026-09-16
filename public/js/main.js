@@ -81,8 +81,10 @@ async function navigate(route) {
       });
     } else if (route === 'links') {
       await renderLinksPage(pageRoot, {
-        links,
+        links, profile,
         onLinksChanged: (updated) => store.set({ links: updated }),
+        onNavigate: navigate,
+        onProfileChanged: (updated) => store.set({ profile: updated }),
       });
     } else if (route === 'appearance') {
       renderAppearancePage(pageRoot, {

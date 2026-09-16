@@ -145,9 +145,16 @@ async function handleUpdateProfile(request, env, user) {
   }
 
   const socials = body.socials || {};
+  const socialsVisible = body.socialsVisible || {};
+  const visBit = (v, existing) => {
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    return existing === 0 ? 0 : 1; // treat missing/undefined as "no change", default visible
+  };
+
   await env.DB.prepare(`
     UPDATE users SET name=?, email=?, username=?, bio=?, location=?, website=?, phone=?, avatar_url=?,
-      social_instagram=?, social_youtube=?, social_tiktok=?, social_x=?, social_linkedin=?
+      social_instagram=?, social_youtube=?, social_tiktok=?, social_x=?, social_linkedin=?,
+      social_instagram_visible=?, social_youtube_visible=?, social_tiktok_visible=?, social_x_visible=?, social_linkedin_visible=?
     WHERE id=?
   `).bind(
     fields.name, fields.email, username, fields.bio, fields.location, fields.website, fields.phone, fields.avatar_url,
@@ -156,6 +163,11 @@ async function handleUpdateProfile(request, env, user) {
     clampStr(socials.tiktok ?? user.social_tiktok, 200),
     clampStr(socials.x ?? user.social_x, 200),
     clampStr(socials.linkedin ?? user.social_linkedin, 200),
+    visBit(socialsVisible.instagram, user.social_instagram_visible),
+    visBit(socialsVisible.youtube, user.social_youtube_visible),
+    visBit(socialsVisible.tiktok, user.social_tiktok_visible),
+    visBit(socialsVisible.x, user.social_x_visible),
+    visBit(socialsVisible.linkedin, user.social_linkedin_visible),
     user.id
   ).run();
 
@@ -381,8 +393,11 @@ async function handlePublicProfile(request, env, username) {
       name: user.name, username: user.username, bio: user.bio, avatarUrl: user.avatar_url,
       website: user.website, email: user.email, phone: user.phone,
       socials: {
-        instagram: user.social_instagram, youtube: user.social_youtube, tiktok: user.social_tiktok,
-        x: user.social_x, linkedin: user.social_linkedin,
+        instagram: user.social_instagram_visible ? user.social_instagram : '',
+        youtube: user.social_youtube_visible ? user.social_youtube : '',
+        tiktok: user.social_tiktok_visible ? user.social_tiktok : '',
+        x: user.social_x_visible ? user.social_x : '',
+        linkedin: user.social_linkedin_visible ? user.social_linkedin : '',
       },
     },
     links,

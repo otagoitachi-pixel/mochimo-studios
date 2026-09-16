@@ -18,37 +18,199 @@ const LINK_TYPES = [
 ];
 const iconFor = (type) => LINK_TYPES.find(t => t.id === type)?.icon || 'link';
 
-async function renderLinksPage(root, { links, onLinksChanged }) {
+// Fixed quick-connect socials — always the same five platforms, sourced from
+// the profile (My Profile page owns the actual values). This page only
+// controls whether each one shows on the public profile.
+const SOCIAL_PLATFORMS = [
+  { key: 'instagram', label: 'Instagram', icon: 'instagram' },
+  { key: 'youtube', label: 'YouTube', icon: 'youtube' },
+  { key: 'tiktok', label: 'TikTok', icon: 'tiktok' },
+  { key: 'x', label: 'X (Twitter)', icon: 'x' },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'linkedin' },
+];
+
+function formatSocialDisplay(value) {
+  return value.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+}
+
+function ensureStyles() {
+  if (document.getElementById('ml-links-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'ml-links-styles';
+  style.textContent = `
+    .ml-tabs { display: inline-flex; gap: 0.35rem; background: var(--blush); padding: 0.3rem; border-radius: var(--r-full); margin: 0 0 1.25rem; max-width: 100%; }
+    .ml-tab { display: inline-flex; align-items: center; gap: 0.45rem; border: none; background: transparent; padding: 0.6rem 1.1rem; border-radius: var(--r-full); font-family: var(--font-body); font-weight: 700; font-size: 0.85rem; color: var(--ink-2); cursor: pointer; transition: background .15s ease, color .15s ease; white-space: nowrap; }
+    .ml-tab:hover:not(.active) { background: rgba(255,255,255,0.55); }
+    .ml-tab.active { background: var(--rose); color: #fff; box-shadow: var(--shadow-sm); }
+    .ml-social-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .ml-social-title { margin: 0; font-weight: 700; font-size: 1.02rem; }
+    .ml-social-subtitle { margin: 0.2rem 0 0; font-size: 0.82rem; color: var(--text-muted); max-width: 40ch; }
+    .ml-social-list { display: flex; flex-direction: column; }
+    .ml-social-row { display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border-subtle); }
+    .ml-social-row:last-child { border-bottom: none; }
+    .ml-social-meta { flex: 1; min-width: 0; }
+    .ml-social-name { margin: 0; font-weight: 700; font-size: 0.92rem; }
+    .ml-social-handle { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ml-social-handle.ml-social-empty { font-style: italic; color: var(--text-faint); }
+    .ml-social-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+    .ml-social-showlabel { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); min-width: 2.8ch; text-align: right; }
+    .ml-social-banner { display: flex; align-items: center; gap: 0.6rem; background: var(--blush); color: var(--rose-deep); font-size: 0.8rem; font-weight: 600; padding: 0.85rem 1rem; border-radius: var(--r-md); margin-top: 1rem; }
+    .ml-dashed-add { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.9rem; border-radius: var(--r-md); border: 1.5px dashed var(--rose-soft); background: transparent; color: var(--rose-deep); font-weight: 700; font-size: 0.88rem; cursor: pointer; margin-bottom: 1rem; }
+    .ml-dashed-add:hover { background: var(--blush); }
+    .ml-extra-empty { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; text-align: center; padding: 1.25rem 1rem; color: var(--text-muted); }
+    .ml-extra-empty .empty-icon { color: var(--rose-deep); background: var(--blush); height: 52px; width: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 0.3rem; }
+    .ml-extra-empty-title { margin: 0; font-weight: 700; color: var(--ink); font-family: var(--font-display); font-style: italic; font-size: 1.05rem; }
+    .ml-extra-empty-sub { margin: 0; font-size: 0.82rem; }
+    @media (max-width: 560px) {
+      .ml-tabs { width: 100%; }
+      .ml-tab { flex: 1; justify-content: center; }
+      .ml-social-showlabel { display: none; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+async function renderLinksPage(root, { links, profile, onLinksChanged, onNavigate, onProfileChanged }) {
+  ensureStyles();
   let localLinks = links;
+  let currentProfile = profile || { socials: {}, socialsVisible: {} };
+  let activeTab = 'social';
+
+  function goToProfile() {
+    if (typeof onNavigate === 'function') onNavigate('profile');
+    else toast('Head to My Profile to edit your social accounts.');
+  }
 
   function paint() {
-    const activeCount = localLinks.filter(l => l.enabled).length;
     root.innerHTML = `
       <div class="page-header">
         <div>
           <h1 class="font-display">My Links</h1>
-          <p>Build the perfect version of your profile.</p>
+          <p>Control what appears on your link in bio page.</p>
         </div>
         <div class="page-header-actions">
-          <button type="button" class="btn btn-accent" id="addLinkBtn">${icon('plus', { size: 15 })} Add Link</button>
+          ${activeTab === 'extra'
+            ? `<button type="button" class="btn btn-accent" id="addLinkBtn">${icon('plus', { size: 15 })} Add Link</button>`
+            : `<button type="button" class="btn btn-accent" id="addSocialBtn">${icon('plus', { size: 15 })} Add Social</button>`}
         </div>
       </div>
 
-      <p class="text-muted" style="font-size:0.85rem;margin:-0.75rem 0 1.25rem;">${activeCount} active link${activeCount === 1 ? '' : 's'} of ${localLinks.length} total</p>
+      <div class="ml-tabs" role="tablist">
+        <button type="button" class="ml-tab ${activeTab === 'social' ? 'active' : ''}" data-tab="social" role="tab" aria-selected="${activeTab === 'social'}">${icon('user', { size: 15 })} Social Accounts</button>
+        <button type="button" class="ml-tab ${activeTab === 'extra' ? 'active' : ''}" data-tab="extra" role="tab" aria-selected="${activeTab === 'extra'}">${icon('link', { size: 15 })} Extra Links</button>
+      </div>
 
-      <div id="linksList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+      <div id="tabPanel"></div>
     `;
 
-    root.querySelector('#addLinkBtn').addEventListener('click', () => openLinkModal());
+    root.querySelector('#addSocialBtn')?.addEventListener('click', goToProfile);
+    root.querySelector('#addLinkBtn')?.addEventListener('click', () => openLinkModal());
+    root.querySelectorAll('.ml-tab').forEach(btn => btn.addEventListener('click', () => {
+      if (btn.dataset.tab === activeTab) return;
+      activeTab = btn.dataset.tab;
+      paint();
+    }));
 
-    const listEl = root.querySelector('#linksList');
+    const panel = root.querySelector('#tabPanel');
+    if (activeTab === 'social') paintSocialPanel(panel);
+    else paintExtraPanel(panel);
+  }
+
+  function paintSocialPanel(panel) {
+    const visibility = currentProfile.socialsVisible || {};
+    const profileSocials = currentProfile.socials || {};
+
+    panel.innerHTML = `
+      <div class="card card-pad">
+        <div class="ml-social-head">
+          <div>
+            <p class="ml-social-title">Social Accounts</p>
+            <p class="ml-social-subtitle">Manage your social links. Turn them on or off to show or hide on your profile.</p>
+          </div>
+          <button type="button" class="btn btn-accent btn-sm" id="addSocialBtn2">${icon('plus', { size: 14 })} Add Social</button>
+        </div>
+        <div class="ml-social-list">
+          ${SOCIAL_PLATFORMS.map(p => socialRowHTML(p, profileSocials[p.key], visibility[p.key] !== false)).join('')}
+        </div>
+        <div class="ml-social-banner">${icon('eye', { size: 15 })} Only enabled social accounts will appear on your link in bio page.</div>
+      </div>
+    `;
+
+    panel.querySelector('#addSocialBtn2')?.addEventListener('click', goToProfile);
+    panel.querySelectorAll('[data-add-social]').forEach(btn => btn.addEventListener('click', goToProfile));
+    panel.querySelectorAll('[data-social-menu]').forEach(btn => btn.addEventListener('click', goToProfile));
+    panel.querySelectorAll('[data-vis-toggle]').forEach(input => {
+      input.addEventListener('change', async (e) => {
+        const key = e.target.dataset.visToggle;
+        const checked = e.target.checked;
+        try {
+          const updated = await api.updateProfile({ socialsVisible: { [key]: checked } });
+          currentProfile = updated;
+          if (typeof onProfileChanged === 'function') onProfileChanged(updated);
+          toast(checked ? `${labelFor(key)} will show on your public profile.` : `${labelFor(key)} hidden from your public profile.`);
+        } catch (err) {
+          toast(err.message || 'Could not update visibility.', { type: 'error' });
+        }
+        paint();
+      });
+    });
+  }
+
+  function labelFor(key) {
+    return SOCIAL_PLATFORMS.find(p => p.key === key)?.label || 'Account';
+  }
+
+  function socialRowHTML(platform, value, visible) {
+    const hasValue = !!(value && value.trim());
+    return `
+      <div class="ml-social-row" data-social="${platform.key}">
+        <span class="icon-circle">${icon(platform.icon, { size: 17 })}</span>
+        <div class="ml-social-meta">
+          <p class="ml-social-name">${platform.label}</p>
+          <p class="ml-social-handle ${hasValue ? '' : 'ml-social-empty'}">${hasValue ? escapeHTML(formatSocialDisplay(value)) : 'Not added yet'}</p>
+        </div>
+        <div class="ml-social-right">
+          ${hasValue ? `
+            <span class="ml-social-showlabel">${visible ? 'Show' : 'Hide'}</span>
+            <label class="toggle">
+              <input type="checkbox" data-vis-toggle="${platform.key}" ${visible ? 'checked' : ''}>
+              <span class="track"></span><span class="thumb"></span>
+            </label>
+            <button type="button" class="btn-icon" data-social-menu="${platform.key}" aria-label="Edit ${platform.label} in Profile">${icon('more', { size: 14 })}</button>
+          ` : `
+            <button type="button" class="btn btn-secondary btn-sm" data-add-social="${platform.key}">Add</button>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  function paintExtraPanel(panel) {
+    const activeCount = localLinks.filter(l => l.enabled).length;
+    panel.innerHTML = `
+      <div class="card card-pad">
+        <div class="ml-social-head">
+          <div>
+            <p class="ml-social-title">Extra Links</p>
+            <p class="ml-social-subtitle">Add custom links like websites, portfolios, or anything else you want to share.</p>
+          </div>
+          <button type="button" class="btn btn-accent btn-sm" id="addLinkBtn2">${icon('plus', { size: 14 })} Add Link</button>
+        </div>
+        ${localLinks.length ? `<p class="text-muted" style="font-size:0.8rem;margin:-0.6rem 0 1rem;">${activeCount} active link${activeCount === 1 ? '' : 's'} of ${localLinks.length} total</p>` : ''}
+        <div id="linksList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+      </div>
+    `;
+
+    panel.querySelector('#addLinkBtn2').addEventListener('click', () => openLinkModal());
+
+    const listEl = panel.querySelector('#linksList');
     if (!localLinks.length) {
       listEl.innerHTML = `
-        <div class="card empty-state">
-          <span class="empty-icon">${icon('link', { size: 24 })}</span>
-          <h3>Your profile is waiting for its first link.</h3>
-          <p>Add Instagram, your website, WhatsApp — whatever matters most.</p>
-          <button type="button" class="btn btn-accent btn-sm" id="emptyAddLinkBtn">${icon('plus', { size: 14 })} Add your first link</button>
+        <button type="button" class="ml-dashed-add" id="emptyAddLinkBtn">${icon('plus', { size: 14 })} Add Link</button>
+        <div class="ml-extra-empty">
+          <span class="empty-icon">${icon('cat', { size: 26 })}</span>
+          <p class="ml-extra-empty-title">No extra links yet</p>
+          <p class="ml-extra-empty-sub">Add your first link to get started!</p>
         </div>`;
       listEl.querySelector('#emptyAddLinkBtn').addEventListener('click', () => openLinkModal());
       return;
