@@ -1,0 +1,15 @@
+{
+  "name": "mochimo-studios",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "db:local": "wrangler d1 migrations apply mochimo-db --local",
+    "db:remote": "wrangler d1 migrations apply DB --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.1"
+  }
+}

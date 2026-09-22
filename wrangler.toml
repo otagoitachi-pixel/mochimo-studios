@@ -1,0 +1,18 @@
+name = "mochimo-studios"
+main = "src/worker.js"
+compatibility_date = "2026-09-15"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/u/*", "/q/*", "/n/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mochimo-db"
+database_id = "f03c80ee-2534-480b-b188-129975ce02d7"
+
+
+[vars]
+SUPABASE_BUCKET = "mochimo-images"
