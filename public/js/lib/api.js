@@ -31,6 +31,7 @@ const mapAppearance = (a) => a ? ({
   background: a.background, customBg: a.custom_bg, accentColor: a.accent_color,
   effects: { shadows: !!a.fx_shadows, borders: !!a.fx_borders, bgShapes: !!a.fx_bg_shapes, animations: !!a.fx_animations },
   photographerGallery: parseGallery(a.photographer_gallery_json),
+  heroMedia: { type: a.hero_media_type === 'video' ? 'video' : 'image', url: a.hero_media_url || '' },
 }) : null;
 
 const mapSettings = (s) => s ? ({

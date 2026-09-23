@@ -328,9 +328,20 @@ async function handleUpdateAppearance(request, env, user) {
     ? sanitizeGallery(body.photographerGallery, current.photographer_gallery_json)
     : current.photographer_gallery_json;
 
+  // Hero banner media is independent from the Featured Work gallery (see
+  // migration 0004) so it never doubles up inside the reels/photos slider.
+  const heroMedia = body.heroMedia;
+  const heroMediaUrl = heroMedia !== undefined
+    ? (heroMedia && isSafeUrl(heroMedia.url) ? clampStr(heroMedia.url, 500) : '')
+    : current.hero_media_url;
+  const heroMediaType = heroMedia !== undefined
+    ? (heroMedia?.type === 'video' ? 'video' : 'image')
+    : current.hero_media_type;
+
   await env.DB.prepare(`
     UPDATE appearance SET theme=?, button_style=?, layout=?, font=?, background=?, custom_bg=?, accent_color=?,
-      fx_shadows=?, fx_borders=?, fx_bg_shapes=?, fx_animations=?, photographer_gallery_json=? WHERE user_id=?
+      fx_shadows=?, fx_borders=?, fx_bg_shapes=?, fx_animations=?, photographer_gallery_json=?,
+      hero_media_url=?, hero_media_type=? WHERE user_id=?
   `).bind(
     THEMES.includes(body.theme) ? body.theme : current.theme,
     BUTTON_STYLES.includes(body.buttonStyle) ? body.buttonStyle : current.button_style,
@@ -344,6 +355,8 @@ async function handleUpdateAppearance(request, env, user) {
     effects.bgShapes !== undefined ? (effects.bgShapes ? 1 : 0) : current.fx_bg_shapes,
     effects.animations !== undefined ? (effects.animations ? 1 : 0) : current.fx_animations,
     galleryJson,
+    heroMediaUrl,
+    heroMediaType,
     user.id
   ).run();
   const updated = await env.DB.prepare('SELECT * FROM appearance WHERE user_id = ?').bind(user.id).first();

@@ -57,14 +57,20 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
     socials.facebook && { key: 'facebook', icon: 'facebook' },
   ].filter(Boolean);
 
-  const heroImage = gallery[0]?.url || '';
+  // The hero banner is its own dedicated slot (set via "Add Hero Image" in
+  // Appearance) so it never doubles up inside the Featured Work/Reels
+  // slider below. Older profiles that never set one explicitly still fall
+  // back to the first gallery item, same as before.
+  const dedicatedHero = appearance.heroMedia && appearance.heroMedia.url ? appearance.heroMedia : null;
+  const hero = dedicatedHero || gallery[0] || null;
+  const heroImage = hero?.url || '';
   const portfolioLink = activeLinks.find(l => /portfolio/i.test(l.title));
   const reelsOnly = gallery.length > 0 && gallery.every(item => item.type === 'video');
 
   container.className = container.classList.contains('phone-screen') ? 'phone-screen mo-photo' : 'mo-photo';
   container.innerHTML = `
     <div class=\"mo-photo-hero ${heroImage ? '' : 'mo-photo-hero-empty'}\">
-      ${heroImage ? (gallery[0].type === 'video'
+      ${heroImage ? (hero.type === 'video'
         ? `<video src=\"${escapeHTML(heroImage)}\" muted playsinline loop autoplay preload=\"metadata\"></video>`
         : `<img src=\"${escapeHTML(heroImage)}\" alt=\"${escapeHTML(`${profile.name || 'Photographer'} — featured work`)}\" loading=\"eager\">`) : ''}
       <div class=\"mo-photo-hero-veil\"></div>

@@ -25,6 +25,7 @@ const BACKGROUNDS = ['cream', 'blush', 'lavender', 'dark', 'custom'];
 function renderAppearancePage(root, { profile, links, appearance, onAppearanceChanged }) {
   const draft = structuredClone(appearance);
   draft.photographerGallery = draft.photographerGallery || [];
+  draft.heroMedia = draft.heroMedia && typeof draft.heroMedia === 'object' ? draft.heroMedia : { type: 'image', url: '' };
 
   function paint() {
     root.innerHTML = `
@@ -55,8 +56,28 @@ function renderAppearancePage(root, { profile, links, appearance, onAppearanceCh
 
           ${draft.theme === 'photographer' ? `
           <div class="card card-pad">
+            <p class="section-label">Hero image</p>
+            <p class="hint" style="margin:-0.5rem 0 0.9rem;">The large banner behind your profile photo. It's separate from Featured Work below, so it won't repeat there.</p>
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;">
+              <div id="heroPreviewWrap" style="width:64px;height:64px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0;background:var(--bg-surface-muted);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);">
+                ${draft.heroMedia.url ? (draft.heroMedia.type === 'video'
+                  ? `<video id="heroPreviewMedia" src="${draft.heroMedia.url}" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`
+                  : `<img id="heroPreviewMedia" src="${draft.heroMedia.url}" alt="" style="width:100%;height:100%;object-fit:cover;">`) : icon('camera', { size: 22 })}
+              </div>
+              <select class="select" id="heroTypeSelect" style="width:auto;min-width:6.5rem;">
+                <option value="image" ${draft.heroMedia.type !== 'video' ? 'selected' : ''}>Photo</option>
+                <option value="video" ${draft.heroMedia.type === 'video' ? 'selected' : ''}>Video</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" id="heroUploadBtn">${icon('upload', { size: 14 })} ${draft.heroMedia.url ? 'Replace' : 'Add Hero Image'}</button>
+              ${draft.heroMedia.url ? `<button type="button" class="btn-icon" id="heroRemoveBtn" aria-label="Remove hero media" style="color:var(--danger-deep);">${icon('trash', { size: 14 })}</button>` : ''}
+              <span class="hint" id="heroStatus" style="flex-basis:100%;"></span>
+            </div>
+            <input type="file" id="heroFileInput" accept="${MEDIA_TYPES[draft.heroMedia.type === 'video' ? 'video' : 'image'].accept}" style="display:none;">
+          </div>
+
+          <div class="card card-pad">
             <p class="section-label">Featured Work gallery</p>
-            <p class="hint" style="margin:-0.5rem 0 0.9rem;">The first featured item becomes your hero image. Add photos and reels; they will rotate automatically on the public profile.</p>
+            <p class="hint" style="margin:-0.5rem 0 0.9rem;">Add photos and reels below — they rotate automatically on the public profile, separate from your hero image above.</p>
             <div id="galleryList" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
             <div class="flex items-center gap-2" style="margin-top:0.85rem;flex-wrap:wrap;">
               <button type="button" class="btn btn-secondary btn-sm" id="addGalleryImageBtn">+ Add photo</button>
@@ -129,6 +150,54 @@ function renderAppearancePage(root, { profile, links, appearance, onAppearanceCh
     paintPreview();
 
     if (draft.theme === 'photographer') {
+      // --- Hero image (separate from the Featured Work gallery) ---
+      const heroTypeSelect = root.querySelector('#heroTypeSelect');
+      const heroUploadBtn = root.querySelector('#heroUploadBtn');
+      const heroFileInput = root.querySelector('#heroFileInput');
+      const heroStatus = root.querySelector('#heroStatus');
+
+      heroTypeSelect.addEventListener('change', (e) => {
+        const nextType = e.target.value === 'video' ? 'video' : 'image';
+        draft.heroMedia.type = nextType;
+        // Clear a previous URL when switching type so a photo is never
+        // accidentally submitted as a video hero, or vice versa.
+        draft.heroMedia.url = '';
+        heroFileInput.accept = MEDIA_TYPES[nextType].accept;
+        paint();
+      });
+      heroUploadBtn.addEventListener('click', () => heroFileInput.click());
+      heroFileInput.addEventListener('change', async () => {
+        const file = heroFileInput.files?.[0];
+        heroFileInput.value = '';
+        if (!file) return;
+        const type = draft.heroMedia.type === 'video' ? 'video' : 'image';
+        const config = MEDIA_TYPES[type];
+        if (!config.accept.split(',').includes(file.type)) {
+          toast(type === 'video' ? 'Please upload an MP4 or WebM video.' : 'Please upload a JPG, PNG, WEBP or GIF image.', { type: 'error' });
+          return;
+        }
+        if (file.size > config.maxBytes) {
+          toast(type === 'video' ? 'Hero video must be 30MB or smaller.' : 'Hero image must be 5MB or smaller.', { type: 'error' });
+          return;
+        }
+        heroUploadBtn.disabled = true;
+        heroStatus.textContent = 'Uploading…';
+        try {
+          const data = await api.uploadMedia(file);
+          if (data.type !== type) throw new Error('Uploaded media type did not match the selected type.');
+          draft.heroMedia.url = data.url;
+          paint();
+        } catch (err) {
+          toast(err.message || `Could not upload hero ${type === 'video' ? 'video' : 'image'}.`, { type: 'error' });
+          heroUploadBtn.disabled = false;
+          heroStatus.textContent = '';
+        }
+      });
+      root.querySelector('#heroRemoveBtn')?.addEventListener('click', () => {
+        draft.heroMedia = { type: 'image', url: '' };
+        paint();
+      });
+
       const galleryList = root.querySelector('#galleryList');
       const paintGalleryRows = () => {
         galleryList.innerHTML = draft.photographerGallery.length ? draft.photographerGallery.map((g, i) => `
