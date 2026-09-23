@@ -6,6 +6,22 @@ import { escapeHTML, initials } from '../lib/utils.js';
 
 const CATEGORIES = ['Weddings', 'Portraits', 'Events', 'Lifestyle'];
 
+// Maps a link's title to the most fitting icon so every action card gets a
+// small "logo" badge before its text — booking links get a calendar mark,
+// portfolio/gallery links get a camera, etc. Falls back to a generic link icon.
+function pickLinkIcon(title = '') {
+  const t = title.toLowerCase();
+  if (/book|appointment|session|schedule|consult|meeting/.test(t)) return 'calendar';
+  if (/portfolio|gallery|work|photo|shoot/.test(t)) return 'camera';
+  if (/contact|email|mail/.test(t)) return 'mail';
+  if (/call|phone|whatsapp/.test(t)) return 'phone';
+  if (/shop|store|print|buy/.test(t)) return 'store';
+  if (/pay|invoice|price|wallet/.test(t)) return 'wallet';
+  if (/video|reel|film/.test(t)) return 'video';
+  if (/site|website/.test(t)) return 'globe';
+  return 'link';
+}
+
 function mediaMarkup(item, alt = 'Featured work') {
   const url = escapeHTML(item?.url || '');
   const safeAlt = escapeHTML(alt);
@@ -67,7 +83,7 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
     </div>
 
     <div class=\"mo-photo-actions\">
-      ${activeLinks.length ? activeLinks.map(l => `<div class=\"pv-link-custom mo-photo-action-card\"><span class=\"mo-photo-action-title\">${escapeHTML(l.title || 'Untitled')}</span>${l.description ? `<span class=\"mo-photo-action-desc\">${escapeHTML(l.description)}</span>` : ''}<span class=\"mo-photo-action-arrow\" aria-hidden=\"true\">${icon('arrowRight', { size: 15 })}</span></div>`).join('') : `<div class=\"mo-photo-empty\"><span>${icon('camera', { size: 18 })}</span><p>Add links from the Links page to show booking, portfolio and contact actions here.</p></div>`}
+      ${activeLinks.length ? activeLinks.map(l => `<div class=\"pv-link-custom mo-photo-action-card\"><span class=\"mo-photo-action-icon\">${icon(pickLinkIcon(l.title), { size: 18 })}</span><span class=\"mo-photo-action-text\"><span class=\"mo-photo-action-title\">${escapeHTML(l.title || 'Untitled')}</span>${l.description ? `<span class=\"mo-photo-action-desc\">${escapeHTML(l.description)}</span>` : ''}</span><span class=\"mo-photo-action-arrow\" aria-hidden=\"true\">${icon('arrowRight', { size: 15 })}</span></div>`).join('') : `<div class=\"mo-photo-empty\"><span>${icon('camera', { size: 18 })}</span><p>Add links from the Links page to show booking, portfolio and contact actions here.</p></div>`}
     </div>
 
     <div class=\"mo-photo-section\">

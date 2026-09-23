@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "deploy": "wrangler d1 migrations apply mochimo-db --remote && wrangler deploy",
     "db:local": "wrangler d1 migrations apply mochimo-db --local",
-    "db:remote": "wrangler d1 migrations apply DB --remote"
+    "db:remote": "wrangler d1 migrations apply mochimo-db --remote"
   },
   "devDependencies": {
     "wrangler": "^4.131.1"
