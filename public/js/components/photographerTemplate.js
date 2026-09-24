@@ -140,7 +140,7 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
         <article class=\"mo-photo-slide\" data-slide-index=\"${localIndex}\">
           ${mediaMarkup(item, item.caption || (item.type === 'video' ? 'Featured reel' : 'Featured work'))}
           <div class=\"mo-photo-slide-shade\"></div>
-          ${item.type === 'video' ? `<span class=\"mo-photo-reel-badge\">${icon('video', { size: 12 })} REEL</span><button type=\"button\" class=\"mo-photo-video-play\" data-video-toggle aria-label=\"Play reel\">${icon('play', { size: 18 })}</button>` : ''}
+          ${item.type === 'video' ? `<span class=\"mo-photo-reel-badge\">${icon('video', { size: 12 })} REEL</span><span class=\"mo-photo-video-indicator\" data-video-indicator aria-hidden=\"true\">${icon('play', { size: 20 })}</span>` : ''}
           ${item.caption ? `<div class=\"mo-photo-slide-caption\"><strong>${escapeHTML(item.caption)}</strong><span>${escapeHTML(item.category || 'Featured')}</span></div>` : `<div class=\"mo-photo-slide-caption\"><span>${escapeHTML(item.category || (item.type === 'video' ? 'Reel' : 'Featured'))}</span></div>`}
         </article>
       `).join('');
@@ -158,12 +158,20 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
       if (counterEl) counterEl.textContent = `${current + 1} / ${Math.max(1, visible.length)}`;
       if (progressEl) progressEl.style.width = `${((current + 1) / Math.max(1, visible.length)) * 100}%`;
 
-      track.querySelectorAll('[data-video-toggle]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const video = btn.closest('.mo-photo-slide')?.querySelector('video');
-          if (!video) return;
-          if (video.paused) { video.play().catch(() => {}); btn.innerHTML = icon('pause', { size: 18 }); }
-          else { video.pause(); btn.innerHTML = icon('play', { size: 18 }); }
+      // Reels: tap anywhere on the tile to pause/resume — no persistent
+      // on-screen button. A small play icon only fades in while paused, as
+      // a hint that tapping resumes it; it disappears once playing again.
+      track.querySelectorAll('.mo-photo-slide').forEach(slideEl => {
+        const video = slideEl.querySelector('video');
+        if (!video) return;
+        const indicator = slideEl.querySelector('[data-video-indicator]');
+        const syncIndicator = () => { if (indicator) indicator.classList.toggle('is-visible', video.paused); };
+        video.addEventListener('play', syncIndicator);
+        video.addEventListener('pause', syncIndicator);
+        syncIndicator();
+        slideEl.addEventListener('click', () => {
+          if (video.paused) video.play().catch(() => {});
+          else video.pause();
         });
       });
       dotsEl?.querySelectorAll('[data-dot]').forEach(dot => dot.addEventListener('click', () => { current = Number(dot.dataset.dot); renderSlides(); restart(); }));
