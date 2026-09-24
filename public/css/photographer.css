@@ -202,14 +202,27 @@
   display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap; cursor: pointer;
 }
 
-.mo-photo-categories { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-.mo-photo-chip {
-  border: 1px solid var(--mo-photo-border); background: transparent; color: var(--mo-photo-muted);
-  font-size: 0.72rem; font-weight: 600; padding: 0.35rem 0.8rem; border-radius: 999px; cursor: pointer;
-  transition: background .15s ease, color .15s ease, border-color .15s ease;
+.mo-photo-media-toggle {
+  display: inline-flex; align-items: center; gap: 0.15rem;
+  padding: 0.28rem; margin-bottom: 1rem;
+  background: var(--mo-photo-surface);
+  border: 1px solid var(--mo-photo-border);
+  border-radius: 999px;
 }
-.mo-photo-chip:hover { border-color: var(--mo-photo-gold-soft); color: var(--mo-photo-cream); }
-.mo-photo-chip.active { background: var(--mo-photo-gold); color: #17140F; border-color: var(--mo-photo-gold); }
+.mo-photo-media-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  border: none; background: transparent; color: var(--mo-photo-muted);
+  font-size: 0.74rem; font-weight: 700; letter-spacing: 0.01em;
+  padding: 0.46rem 1rem; border-radius: 999px; cursor: pointer;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.mo-photo-media-btn svg { flex: none; }
+.mo-photo-media-btn:hover:not(.active) { color: var(--mo-photo-cream); }
+.mo-photo-media-btn.active {
+  background: linear-gradient(135deg, var(--mo-photo-gold), #8a7238);
+  color: #17140F;
+  box-shadow: 0 3px 10px -3px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.15);
+}
 
 .mo-photo-grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem;

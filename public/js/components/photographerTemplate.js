@@ -66,6 +66,9 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
   const heroImage = hero?.url || '';
   const portfolioLink = activeLinks.find(l => /portfolio/i.test(l.title));
   const reelsOnly = gallery.length > 0 && gallery.every(item => item.type === 'video');
+  const hasPhotos = gallery.some(item => item.type === 'image');
+  const hasVideos = gallery.some(item => item.type === 'video');
+  const mediaLabel = hasPhotos && hasVideos ? 'PHOTOS + REELS' : hasVideos ? 'REELS ONLY' : hasPhotos ? 'PHOTOS ONLY' : '';
 
   container.className = container.classList.contains('phone-screen') ? 'phone-screen mo-photo' : 'mo-photo';
   container.innerHTML = `
@@ -95,15 +98,18 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
     <div class=\"mo-photo-section\">
       <div class=\"mo-photo-section-head\">
         <h2>${reelsOnly ? 'Featured Reels' : 'Featured Work'}</h2>
-        ${gallery.length ? `<span class=\"mo-photo-media-label\">${reelsOnly ? 'REELS ONLY' : 'PHOTOS + REELS'}</span>` : ''}
+        ${gallery.length ? `<span class=\"mo-photo-media-label\">${mediaLabel}</span>` : ''}
         ${portfolioLink ? `<span class=\"mo-photo-viewall\" data-view-all-link=\"${portfolioLink.id}\">View All ${icon('arrowRight', { size: 13 })}</span>` : ''}
       </div>
 
       ${gallery.length ? `
-        <div class=\"mo-photo-categories\" role=\"group\" aria-label=\"Filter featured work\">
-          <button type=\"button\" class=\"mo-photo-chip active\" data-filter=\"\">All</button>
-          ${CATEGORIES.map(c => `<button type=\"button\" class=\"mo-photo-chip\" data-filter=\"${c}\">${c}</button>`).join('')}
+        ${hasPhotos && hasVideos ? `
+        <div class=\"mo-photo-media-toggle\" role=\"group\" aria-label=\"Filter by media type\">
+          <button type=\"button\" class=\"mo-photo-media-btn active\" data-media-filter=\"\">All</button>
+          <button type=\"button\" class=\"mo-photo-media-btn\" data-media-filter=\"image\">${icon('camera', { size: 14 })}<span>Photos</span></button>
+          <button type=\"button\" class=\"mo-photo-media-btn\" data-media-filter=\"video\">${icon('video', { size: 14 })}<span>Reels</span></button>
         </div>
+        ` : ''}
         <div class=\"mo-photo-slider\" data-slider>
           <div class=\"mo-photo-slider-track\" data-slider-track></div>
           ${gallery.length > 1 ? `<button type=\"button\" class=\"mo-photo-slider-arrow prev\" data-slider-prev aria-label=\"Previous featured work\">${icon('arrowLeft', { size: 18 })}</button><button type=\"button\" class=\"mo-photo-slider-arrow next\" data-slider-next aria-label=\"Next featured work\">${icon('arrowRight', { size: 18 })}</button>` : ''}
@@ -118,7 +124,7 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
   `;
 
   const cleanupFns = [];
-  const chips = container.querySelectorAll('.mo-photo-chip');
+  const mediaFilterBtns = container.querySelectorAll('.mo-photo-media-btn');
   const slider = container.querySelector('[data-slider]');
   if (slider && gallery.length) {
     const track = slider.querySelector('[data-slider-track]');
@@ -196,15 +202,15 @@ function renderPhotographerTemplate(container, { profile, links, appearance }) {
     cleanupFns.push(() => slider.removeEventListener('touchstart', onTouchStart), slider.removeEventListener('touchend', onTouchEnd));
 
     const applyFilter = filter => {
-      visible = gallery.map((item, i) => ({ item, i })).filter(({ item }) => !filter || item.category === filter).map(({ i }) => i);
+      visible = gallery.map((item, i) => ({ item, i })).filter(({ item }) => !filter || item.type === filter).map(({ i }) => i);
       current = 0;
       renderSlides();
       restart();
     };
-    chips.forEach(chip => chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      applyFilter(chip.dataset.filter || '');
+    mediaFilterBtns.forEach(btn => btn.addEventListener('click', () => {
+      mediaFilterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilter(btn.dataset.mediaFilter || '');
     }));
 
     renderSlides();
